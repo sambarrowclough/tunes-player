@@ -60,7 +60,7 @@ export default function Home() {
   )
 }
 
-const App = ({ loading, currentSong, setCurrentSong }) => {
+const App = ({ loading }) => {
   // Ref
 
   const {
@@ -70,10 +70,10 @@ const App = ({ loading, currentSong, setCurrentSong }) => {
     songInfo,
     libraryStatus,
     setLibraryStatus,
-    // currentSong,
+    currentSong,
     isPlaying,
     setIsPlaying,
-    // setCurrentSong,
+    setCurrentSong,
     audioRef,
     setSongInfo
   } = useApp()

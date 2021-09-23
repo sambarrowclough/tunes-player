@@ -23,7 +23,7 @@ export default function Home() {
   )
 }
 
-const App = () => {
+export const App = () => {
   // Ref
 
   const {
