@@ -42,7 +42,7 @@ const LibrarySong = ({
     <a
       onClick={() => {
         setCurrentSong(songs.find(x => x.id === song.id))
-        router.push('/songs/' + song.id)
+        router.push('/?id=' + song.id)
       }}
       // href={{
       //   pathname: '/songs/[slug]',

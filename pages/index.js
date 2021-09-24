@@ -9,6 +9,7 @@ import Library from '../components/Library'
 import Nav from '../components/Nav'
 import Credit from '../components/Credit'
 import { useApp } from '@/utils/useApp'
+import { useRouter } from 'next/router'
 
 export default function Home() {
   return (
@@ -40,6 +41,16 @@ export const App = () => {
     audioRef,
     setSongInfo
   } = useApp()
+
+  const router = useRouter()
+  const { id } = router.query
+
+  // useEffect(() => {
+  //   if (id) {
+  //     const found = songs.find(x => x.id == id)
+  //     if (found && songs?.length) setCurrentSong(found)
+  //   }
+  // }, [songs])
 
   // Functions
   const updateTimeHandler = e => {
