@@ -10,12 +10,13 @@ import Nav from '../components/Nav'
 import Credit from '../components/Credit'
 import { useApp } from '@/utils/useApp'
 import { useRouter } from 'next/router'
+import { usePlayer } from '@/utils/usePlayer'
 
 export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
-        <title>Create Next App</title>
+        <title>Tunes Player</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -24,88 +25,18 @@ export default function Home() {
   )
 }
 
-const products = [
-  {
-    id: 1,
-    name: 'Basic Tee',
-    href: '#',
-    imageSrc:
-      'https://tailwindui.com/img/ecommerce-images/product-page-01-related-product-01.jpg',
-    imageAlt: "Front of men's Basic Tee in black.",
-    price: '$35',
-    color: 'Black'
-  }
-  // More products...
-]
-
 export const App = () => {
   // Ref
 
-  const {
-    songs,
-    setSongs,
-    loading,
-    songInfo,
-    libraryStatus,
-    setLibraryStatus,
-    currentSong,
-    isPlaying,
-    setIsPlaying,
-    setCurrentSong,
-    audioRef,
-    setSongInfo
-  } = useApp()
+  //const { loading } = useApp()
+  const { songs, load, setCurrentSong, skipTrackHandler, loading } = useApp()
 
   const router = useRouter()
   const { id } = router.query
 
-  // useEffect(() => {
-  //   if (id) {
-  //     const found = songs.find(x => x.id == id)
-  //     if (found && songs?.length) setCurrentSong(found)
-  //   }
-  // }, [songs])
-
-  const playSongHandler = () => {
-    if (isPlaying) {
-      audioRef.current.pause()
-      setIsPlaying(!isPlaying)
-    } else {
-      audioRef.current.play()
-      setIsPlaying(!isPlaying)
-    }
-  }
-
-  // Functions
-  const updateTimeHandler = e => {
-    const currentTime = e.target.currentTime
-    const duration = e.target.duration
-    setSongInfo({ ...songInfo, currentTime, duration })
-  }
-
-  const songEndHandler = async () => {
-    let currentIndex = songs.findIndex(song => song.id === currentSong.id)
-    let nextSong = songs[(currentIndex + 1) % songs.length]
-    await setCurrentSong(nextSong)
-
-    const newSongs = songs.map(song => {
-      if (song.id === nextSong.id) {
-        return {
-          ...song,
-          active: true
-        }
-      } else {
-        return {
-          ...song,
-          active: false
-        }
-      }
-    })
-    setSongs(newSongs)
-
-    if (isPlaying) {
-      audioRef.current.play()
-    }
+  const playSong = async song => {
+    load(song.audio)
+    await setCurrentSong(song)
   }
 
   if (loading)
@@ -118,12 +49,25 @@ export const App = () => {
           transform: 'translate(-50%,-50%)'
         }}
       >
-        loading a mood...
+        <svg
+          width="30"
+          height="30"
+          viewBox="0 0 15 15"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M7.49991 0.877075C3.84222 0.877075 0.877075 3.84222 0.877075 7.49991C0.877075 11.1576 3.84222 14.1227 7.49991 14.1227C11.1576 14.1227 14.1227 11.1576 14.1227 7.49991C14.1227 3.84222 11.1576 0.877075 7.49991 0.877075ZM1.82708 7.49991C1.82708 4.36689 4.36689 1.82707 7.49991 1.82707C10.6329 1.82707 13.1727 4.36689 13.1727 7.49991C13.1727 10.6329 10.6329 13.1727 7.49991 13.1727C4.36689 13.1727 1.82708 10.6329 1.82708 7.49991ZM8.37287 7.50006C8.37287 7.98196 7.98221 8.37263 7.5003 8.37263C7.01839 8.37263 6.62773 7.98196 6.62773 7.50006C6.62773 7.01815 7.01839 6.62748 7.5003 6.62748C7.98221 6.62748 8.37287 7.01815 8.37287 7.50006ZM9.32287 7.50006C9.32287 8.50664 8.50688 9.32263 7.5003 9.32263C6.49372 9.32263 5.67773 8.50664 5.67773 7.50006C5.67773 6.49348 6.49372 5.67748 7.5003 5.67748C8.50688 5.67748 9.32287 6.49348 9.32287 7.50006Z"
+            fill="currentColor"
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
       </div>
     )
 
   return (
-    <AppContainer libraryStatus={libraryStatus}>
+    <AppContainer>
       {/* <Nav
         libraryStatus={libraryStatus}
         setLibraryStatus={setLibraryStatus}
@@ -138,7 +82,7 @@ export const App = () => {
             Library
           </h2>
 
-          <div className="mt-6 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+          <div className="mt-6 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-6 xl:gap-x-8">
             {songs.map((song, i) => (
               <div
                 onMouseOver={() =>
@@ -160,41 +104,14 @@ export const App = () => {
                     // alt={product.imageAlt}
                     className="w-full h-full object-center object-cover lg:w-full lg:h-full "
                   />
+
                   <div
-                    onClick={async e => {
-                      e.stopPropagation()
-                      e.preventDefault()
-                      // playSongHandler()
-                      console.log(song)
-                      await setCurrentSong(song)
-                      audioRef.current.play()
-                      // const curSong = song
-                      // const songList = songs
-
-                      // const newSongs = songList.map(song => {
-                      //   if (song.id === curSong.id) {
-                      //     return {
-                      //       ...song,
-                      //       active: true
-                      //     }
-                      //   } else {
-                      //     return {
-                      //       ...song,
-                      //       active: false
-                      //     }
-                      //   }
-                      // })
-                      // setSongs(newSongs)
-
-                      // check if user is wanting to play a song.
-                      if (true) {
-                      }
-                    }}
-                    className="bg-white flex rounded-full p-2 absolute top-5 left-5 hidden play-item cursor-default transition-all z-10 hover:scale-105"
+                    onClick={() => playSong(song)}
+                    className="bg-white flex rounded-full border-gray-700 text-gray-900 p-3 absolute top-5 left-5 hidden play-item cursor-default transition-all z-10 hover:scale-105"
                   >
                     <svg
-                      width="40"
-                      height="40"
+                      width="30"
+                      height="30"
                       viewBox="0 0 15 15"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
@@ -234,26 +151,6 @@ export const App = () => {
           </div>
         </div>
       </div>
-
-      <Player
-        isPlaying={isPlaying}
-        setIsPlaying={setIsPlaying}
-        currentSong={currentSong}
-        setCurrentSong={setCurrentSong}
-        audioRef={audioRef}
-        songInfo={songInfo}
-        setSongInfo={setSongInfo}
-        songs={songs}
-        setSongs={setSongs}
-        id={currentSong.id}
-      />
-      <audio
-        onLoadedMetadata={updateTimeHandler}
-        onTimeUpdate={updateTimeHandler}
-        onEnded={songEndHandler}
-        ref={audioRef}
-        src={currentSong.audio}
-      />
     </AppContainer>
   )
 }

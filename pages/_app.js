@@ -3,6 +3,16 @@ import './style.css'
 import { useApp, UserContextProvider } from '@/utils/useApp'
 import ReactPlayer from 'react-player'
 import { useState, useRef, useEffect } from 'react'
+import { usePlayer } from '@/utils/usePlayer'
+import Link from 'next/link'
+
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = 'https://trfvrobvcrzcsvjvimfi.supabase.co'
+const supabaseKey =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYzMjY1OTQzOSwiZXhwIjoxOTQ4MjM1NDM5fQ.UPpKk3eyIMMipswMAhU1ixoG56WwLdqWsVuB7TOai0A'
+const supabase = createClient(supabaseUrl, supabaseKey)
+
 // Render a YouTube video player
 function Duration({ className, seconds }) {
   return (
@@ -28,92 +38,24 @@ function pad(string) {
 }
 
 function MyApp({ Component, pageProps }) {
-  const [songs, setSongs] = useState([])
-  useEffect(() => {
-    const run = async () => {
-      let songs = await fetch(
-        'https://sounds-visualizer-api.sambarrowclough.repl.co/v2/songs'
-      ).then(r => r.json())
-      setSongs(songs.filter(x => ReactPlayer.canPlay(x.audio)))
-      // setCurrentSong(songs[0])
-      // setLoading(false)
-    }
-    run()
-  }, [])
-  console.log(songs)
   return (
     <UserContextProvider>
-      <Player songs={songs} />
+      <Player />
       <Component {...pageProps} />
     </UserContextProvider>
   )
 }
 
-const usePlayer = () => {
-  const player = useRef()
-  const currentSongIndex = useRef(0)
-  const [duration, setDuration] = useState(0)
-  const [playing, setPlaying] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [played, setPlayed] = useState(0)
-  const [seeking, setSeeking] = useState(false)
-  const [url, setUrl] = useState('')
-  const [currentSong, setCurrentSong] = useState('')
-  const handlePlayPause = () => setPlaying(!playing)
-
-  const handleSeekMouseDown = e => {
-    setSeeking(true)
-  }
-
-  const handleSeekChange = e => {
-    setPlayed(e.target.value)
-  }
-
-  const handleSeekMouseUp = e => {
-    setSeeking(false)
-    player.current.seekTo(parseFloat(e.target.value))
-  }
-
-  const handleProgress = state => {
-    // We only want to update time slider if we are not currently seeking
-    if (!seeking) {
-      setPlayed(state.played)
-    }
-  }
-
-  const handleDuration = e => setDuration(e)
-  const handlePlay = _ => setPlaying(true)
-
-  const load = url => {
-    setUrl(url)
-    setPlayed(0)
-    setPlaying(true)
-  }
-
-  return {
-    played,
-    duration,
-    player,
-    playing,
-    load,
-    handlePlayPause,
-    handleSeekMouseDown,
-    handleSeekChange,
-    handleSeekMouseUp,
-    url,
-    setUrl,
-    currentSongIndex,
-    handlePlay,
-    handleProgress,
-    handleDuration,
-    setCurrentSong,
-    currentSong,
-    loading,
-    setLoading
-  }
+function uuidv4() {
+  return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+    (
+      c ^
+      (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+    ).toString(16)
+  )
 }
 
-const Player = ({ songs }) => {
+const Player = ({}) => {
   const {
     played,
     duration,
@@ -133,31 +75,66 @@ const Player = ({ songs }) => {
     setCurrentSong,
     currentSong,
     setLoading,
-    loading
-  } = usePlayer()
-
-  const skipTrackHandler = async direction => {
-    let currentIndex = songs.findIndex(song => song.id === currentSong.id)
-    if (direction === 'skip-forward') {
-      let nextSong = songs[(currentIndex + 1) % songs.length]
-      load(nextSong.audio)
-      await setCurrentSong(nextSong)
-    } else if (direction === 'skip-back') {
-      if ((currentIndex - 1) % songs.length === -1) {
-        let nextSong = songs[songs.length - 1]
-        load(nextSong.audio)
-        await setCurrentSong(nextSong)
-      } else {
-        let nextSong = songs[(currentIndex - 1) % songs.length]
-        load(nextSong.audio)
-        await setCurrentSong(nextSong)
-      }
-    }
-  }
+    loading,
+    songs,
+    skipTrackHandler,
+    tracked,
+    setTracked,
+    setPlaying
+  } = useApp()
 
   useEffect(() => {
-    if (songs?.length) setUrl(songs[0].audio)
+    const run = async () => {
+      if (duration * played > 30 && !tracked) {
+        console.log('counting play...', currentSong)
+        const { error, data } = await supabase.from('plays').insert({
+          id: uuidv4(),
+          songName: currentSong.name,
+          songId: currentSong.id
+        })
+        if (error) {
+          console.error(error)
+        }
+        setTracked(!tracked)
+      }
+    }
+    run()
+  }, [duration, played])
+
+  useEffect(() => {
+    if (songs?.length) {
+      load(songs[0].audio)
+      setCurrentSong(songs[0])
+      setPlaying(false)
+    }
   }, [songs])
+
+  if (loading)
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%,-50%)'
+        }}
+      >
+        <svg
+          width="30"
+          height="30"
+          viewBox="0 0 15 15"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M7.49991 0.877075C3.84222 0.877075 0.877075 3.84222 0.877075 7.49991C0.877075 11.1576 3.84222 14.1227 7.49991 14.1227C11.1576 14.1227 14.1227 11.1576 14.1227 7.49991C14.1227 3.84222 11.1576 0.877075 7.49991 0.877075ZM1.82708 7.49991C1.82708 4.36689 4.36689 1.82707 7.49991 1.82707C10.6329 1.82707 13.1727 4.36689 13.1727 7.49991C13.1727 10.6329 10.6329 13.1727 7.49991 13.1727C4.36689 13.1727 1.82708 10.6329 1.82708 7.49991ZM8.37287 7.50006C8.37287 7.98196 7.98221 8.37263 7.5003 8.37263C7.01839 8.37263 6.62773 7.98196 6.62773 7.50006C6.62773 7.01815 7.01839 6.62748 7.5003 6.62748C7.98221 6.62748 8.37287 7.01815 8.37287 7.50006ZM9.32287 7.50006C9.32287 8.50664 8.50688 9.32263 7.5003 9.32263C6.49372 9.32263 5.67773 8.50664 5.67773 7.50006C5.67773 6.49348 6.49372 5.67748 7.5003 5.67748C8.50688 5.67748 9.32287 6.49348 9.32287 7.50006Z"
+            fill="currentColor"
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+          ></path>
+        </svg>
+      </div>
+    )
 
   return (
     <>
@@ -171,6 +148,7 @@ const Player = ({ songs }) => {
         onReady={() => setLoading(false)}
         onStart={() => {
           console.log('onStart')
+          console.log(currentSong)
         }}
         onBuffer={() => console.log('onBuffer')}
         onSeek={e => console.log('onSeek', e)}
@@ -179,10 +157,31 @@ const Player = ({ songs }) => {
         height="100%"
         config={{ file: { forceAudio: true } }}
       />
-      <div className="z-10 w-full border-t-2 border-gray-50 h-10 fixed bottom-0 bg-white">
+      <div className="z-50 w-full border-b-2 border-gray-50 py-2 fixed top-0 bg-white">
         <div className="container flex mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8 items-center">
-          <div className="controls flex items-center">
+          <Link href="/">
             <svg
+              width="30"
+              height="30"
+              viewBox="0 0 15 15"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.49991 0.877075C3.84222 0.877075 0.877075 3.84222 0.877075 7.49991C0.877075 11.1576 3.84222 14.1227 7.49991 14.1227C11.1576 14.1227 14.1227 11.1576 14.1227 7.49991C14.1227 3.84222 11.1576 0.877075 7.49991 0.877075ZM1.82708 7.49991C1.82708 4.36689 4.36689 1.82707 7.49991 1.82707C10.6329 1.82707 13.1727 4.36689 13.1727 7.49991C13.1727 10.6329 10.6329 13.1727 7.49991 13.1727C4.36689 13.1727 1.82708 10.6329 1.82708 7.49991ZM8.37287 7.50006C8.37287 7.98196 7.98221 8.37263 7.5003 8.37263C7.01839 8.37263 6.62773 7.98196 6.62773 7.50006C6.62773 7.01815 7.01839 6.62748 7.5003 6.62748C7.98221 6.62748 8.37287 7.01815 8.37287 7.50006ZM9.32287 7.50006C9.32287 8.50664 8.50688 9.32263 7.5003 9.32263C6.49372 9.32263 5.67773 8.50664 5.67773 7.50006C5.67773 6.49348 6.49372 5.67748 7.5003 5.67748C8.50688 5.67748 9.32287 6.49348 9.32287 7.50006Z"
+                fill="currentColor"
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+          </Link>
+        </div>
+      </div>
+      <div className="z-50 w-full border-t-2 border-gray-50 py-2 fixed bottom-0 bg-white">
+        <div className="container flex mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8 items-center">
+          <div className="controls flex items-center mr-6">
+            <svg
+              className="mr-2"
               onClick={() => skipTrackHandler('skip-back')}
               width="20"
               height="20"
@@ -197,22 +196,42 @@ const Player = ({ songs }) => {
                 clip-rule="evenodd"
               ></path>
             </svg>
+
+            {playing ? (
+              <svg
+                onClick={handlePlayPause}
+                width="30"
+                height="30"
+                viewBox="0 0 15 15"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M6.04995 2.74998C6.04995 2.44623 5.80371 2.19998 5.49995 2.19998C5.19619 2.19998 4.94995 2.44623 4.94995 2.74998V12.25C4.94995 12.5537 5.19619 12.8 5.49995 12.8C5.80371 12.8 6.04995 12.5537 6.04995 12.25V2.74998ZM10.05 2.74998C10.05 2.44623 9.80371 2.19998 9.49995 2.19998C9.19619 2.19998 8.94995 2.44623 8.94995 2.74998V12.25C8.94995 12.5537 9.19619 12.8 9.49995 12.8C9.80371 12.8 10.05 12.5537 10.05 12.25V2.74998Z"
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            ) : (
+              <svg
+                onClick={handlePlayPause}
+                width="30"
+                height="30"
+                viewBox="0 0 15 15"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3.24182 2.32181C3.3919 2.23132 3.5784 2.22601 3.73338 2.30781L12.7334 7.05781C12.8974 7.14436 13 7.31457 13 7.5C13 7.68543 12.8974 7.85564 12.7334 7.94219L3.73338 12.6922C3.5784 12.774 3.3919 12.7687 3.24182 12.6782C3.09175 12.5877 3 12.4252 3 12.25V2.75C3 2.57476 3.09175 2.4123 3.24182 2.32181ZM4 3.57925V11.4207L11.4288 7.5L4 3.57925Z"
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            )}
             <svg
-              onClick={handlePlayPause}
-              width="30"
-              height="30"
-              viewBox="0 0 15 15"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M3.24182 2.32181C3.3919 2.23132 3.5784 2.22601 3.73338 2.30781L12.7334 7.05781C12.8974 7.14436 13 7.31457 13 7.5C13 7.68543 12.8974 7.85564 12.7334 7.94219L3.73338 12.6922C3.5784 12.774 3.3919 12.7687 3.24182 12.6782C3.09175 12.5877 3 12.4252 3 12.25V2.75C3 2.57476 3.09175 2.4123 3.24182 2.32181ZM4 3.57925V11.4207L11.4288 7.5L4 3.57925Z"
-                fill="currentColor"
-                fill-rule="evenodd"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-            <svg
+              className="ml-2"
               onClick={() => skipTrackHandler('skip-forward')}
               width="20"
               height="20"
@@ -229,8 +248,27 @@ const Player = ({ songs }) => {
             </svg>
           </div>
 
-          <Duration seconds={duration * played} />
+          <Duration
+            className="text-gray-500 text-sm mr-2"
+            seconds={duration * played}
+          />
           {/* <progress max={1} value={played} /> */}
+          {/* <StyledSlider
+            onMouseDown={console.log}
+            defaultValue={[0]}
+            max={0.999999}
+            step={0.000001}
+            // value={[played]}
+
+            onValueChange={e => handleSeekChange(e[0].toString())}
+            aria-label="Volume"
+            // onChange={console.log}
+          >
+            <StyledTrack>
+              <StyledRange />
+            </StyledTrack>
+            <StyledThumb />
+          </StyledSlider> */}
           <input
             type="range"
             min={0}
@@ -238,16 +276,81 @@ const Player = ({ songs }) => {
             step="any"
             value={played}
             onMouseDown={handleSeekMouseDown}
-            onChange={handleSeekChange}
+            onChange={e => handleSeekChange(e.target.value)}
             onMouseUp={handleSeekMouseUp}
           />
-          <Duration seconds={duration} />
-          {currentSong.name}
+          <Duration className="text-gray-500 text-sm ml-2" seconds={duration} />
+          <Link className="cursor-pointer" href={'/songs/' + currentSong.id}>
+            <div className="ml-4 text-gray-800 text-sm">{currentSong.name}</div>
+          </Link>
           {loading ? 'loading audio...' : ''}
         </div>
       </div>
     </>
   )
 }
+
+import React from 'react'
+import { styled } from '@stitches/react'
+import { violet, blackA } from '@radix-ui/colors'
+import * as SliderPrimitive from '@radix-ui/react-slider'
+
+const StyledSlider = styled(SliderPrimitive.Root, {
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  userSelect: 'none',
+  touchAction: 'none',
+  width: 400,
+
+  '&[data-orientation="horizontal"]': {
+    height: 20
+  },
+
+  '&[data-orientation="vertical"]': {
+    flexDirection: 'column',
+    width: 20,
+    height: 100
+  }
+})
+
+const StyledTrack = styled(SliderPrimitive.Track, {
+  backgroundColor: blackA.blackA10,
+  position: 'relative',
+  flexGrow: 1,
+  borderRadius: '9999px',
+
+  '&[data-orientation="horizontal"]': { height: 3 },
+  '&[data-orientation="vertical"]': { width: 3 }
+})
+
+const StyledRange = styled(SliderPrimitive.Range, {
+  position: 'absolute',
+  backgroundColor: 'red',
+  borderRadius: '9999px',
+  height: '100%'
+})
+
+const StyledThumb = styled(SliderPrimitive.Thumb, {
+  all: 'unset',
+  display: 'block',
+  width: 10,
+  height: 10,
+  backgroundColor: 'white',
+  //boxShadow: `0 2px 10px ${blackA.blackA7}`,
+  border: '1px solid #aaa',
+  borderRadius: 10,
+  '&:hover': { backgroundColor: violet.violet3 },
+  '&:focus': { boxShadow: `0 0 0 5px ${blackA.blackA8}` }
+})
+
+const SliderDemo = () => (
+  <StyledSlider defaultValue={[50]} max={100} step={1} aria-label="Volume">
+    <StyledTrack>
+      <StyledRange />
+    </StyledTrack>
+    <StyledThumb />
+  </StyledSlider>
+)
 
 export default MyApp

@@ -12,7 +12,7 @@ import Link from 'next/link'
 import Head from 'next/head'
 import React, { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
-
+import { Button } from '@geist-ui/react'
 import { useApp } from '@/utils/useApp'
 
 // Import components
@@ -22,113 +22,47 @@ import Library from '../../components/Library'
 import Nav from '../../components/Nav'
 import Credit from '../../components/Credit'
 
-export default function Home({}) {
-  const { songs, currentSong, setCurrentSong } = useApp()
-  // const { currentSong, setCurrentSong } = useState()
-  const { loading, setLoading } = useState(true)
-
+export default function Home({ song }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2">
       <Head>
-        <title>Create Next App</title>
+        <title>{song.name}</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {
-        <App
-          currentSong={currentSong}
-          setCurrentSong={setCurrentSong}
-          loading={loading}
-        />
-      }
+      {<App song={song} />}
     </div>
   )
 }
 
-const App = ({}) => {
+const App = ({ song }) => {
   // Ref
 
-  const {
-    songs,
-    setSongs,
-    loading,
-    songInfo,
-    libraryStatus,
-    setLibraryStatus,
-    currentSong,
-    isPlaying,
-    setIsPlaying,
-    setCurrentSong,
-    audioRef,
-    setSongInfo
-  } = useApp()
-
+  const { load, setCurrentSong, currentSong } = useApp()
+  let playing = false
   const router = useRouter()
   const { id } = router.query
 
-  useEffect(() => {
-    if (id) {
-      if (isPlaying) {
-        audioRef.current.play()
-        // const newSong = songs?.find(x => x.id == id)
-        // songs?.length && setCurrentSong(newSong)
-      } else {
-      }
-      //console.log(newSong)
-      //songs?.length && setCurrentSong(songs.find(x => x.id == id))
-    }
-  }, [songs, id])
-
-  // Functions
-  const updateTimeHandler = e => {
-    const currentTime = e.target.currentTime
-    const duration = e.target.duration
-    setSongInfo({ ...songInfo, currentTime, duration })
+  if (currentSong.id == id) {
+    //alert(1)
   }
 
-  const songEndHandler = async () => {
-    let currentIndex = songs.findIndex(song => song.id === currentSong.id)
-    let nextSong = songs[(currentIndex + 1) % songs.length]
-    await setCurrentSong(nextSong)
+  // const [song, setSong] = useState({})
 
-    const newSongs = songs.map(song => {
-      if (song.id === nextSong.id) {
-        return {
-          ...song,
-          active: true
-        }
-      } else {
-        return {
-          ...song,
-          active: false
-        }
-      }
-    })
-    setSongs(newSongs)
-
-    if (isPlaying) {
-      audioRef.current.play()
-    }
-  }
-  if (!currentSong) return ''
+  // useEffect(() => {
+  //   console.log(id, songs)
+  //   if (id && songs.length) {
+  //     const song = songs.find(x => x.id == id)
+  //     setSong(song)
+  //   } else if (id && songs.length === 0) {
+  //     alert(1)
+  //   }
+  // }, [id, songs])
 
   //console.log(currentSong)
-  if (loading)
-    return (
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%,-50%)'
-        }}
-      >
-        loading a mood...
-      </div>
-    )
 
   return (
-    <div className="flex flex-col">
+    <div className="container flex-col mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8 items-center">
       {/* <Nav
         libraryStatus={libraryStatus}
         setLibraryStatus={setLibraryStatus}
@@ -150,58 +84,89 @@ const App = ({}) => {
               clip-rule="evenodd"
             ></path>
           </svg>
-          <div className="text-lg text-gray-700 ml-1">Library</div>
+          <div className="text-gray-900 ml-1 text-md">Library</div>
         </div>
       </Link>
-      <div className="flex">
-        <Song currentSong={currentSong} />
+      <div className="flex flex-col md:flex-row">
+        <img
+          style={{ maxWidth: '300px' }}
+          className="mr-4"
+          src={song.cover}
+        ></img>
+        <div>
+          <div className="flex font-bold text-2xl text-gray-900 mb-4">
+            {song?.name}
+          </div>
 
-        <Player
-          isPlaying={isPlaying}
-          setIsPlaying={setIsPlaying}
-          currentSong={currentSong}
-          setCurrentSong={setCurrentSong}
-          audioRef={audioRef}
-          songInfo={songInfo}
-          setSongInfo={setSongInfo}
-          songs={songs}
-          setSongs={setSongs}
-          id={currentSong.id}
-        />
+          {playing ? (
+            <svg
+              //onClick={handlePlayPause}
+              width="80"
+              height="80"
+              viewBox="0 0 15 15"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M6.04995 2.74998C6.04995 2.44623 5.80371 2.19998 5.49995 2.19998C5.19619 2.19998 4.94995 2.44623 4.94995 2.74998V12.25C4.94995 12.5537 5.19619 12.8 5.49995 12.8C5.80371 12.8 6.04995 12.5537 6.04995 12.25V2.74998ZM10.05 2.74998C10.05 2.44623 9.80371 2.19998 9.49995 2.19998C9.19619 2.19998 8.94995 2.44623 8.94995 2.74998V12.25C8.94995 12.5537 9.19619 12.8 9.49995 12.8C9.80371 12.8 10.05 12.5537 10.05 12.25V2.74998Z"
+                fill="currentColor"
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+          ) : (
+            <svg
+              onClick={() => {
+                load(song.audio)
+                setCurrentSong(song)
+              }}
+              className="bg-white border-2 border-gray-900 text-gray-900 p-3 rounded-full flex items-center"
+              width="50"
+              height="50"
+              viewBox="0 0 15 15"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3.24182 2.32181C3.3919 2.23132 3.5784 2.22601 3.73338 2.30781L12.7334 7.05781C12.8974 7.14436 13 7.31457 13 7.5C13 7.68543 12.8974 7.85564 12.7334 7.94219L3.73338 12.6922C3.5784 12.774 3.3919 12.7687 3.24182 12.6782C3.09175 12.5877 3 12.4252 3 12.25V2.75C3 2.57476 3.09175 2.4123 3.24182 2.32181ZM4 3.57925V11.4207L11.4288 7.5L4 3.57925Z"
+                fill="black"
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+          )}
 
-        {/* <Library
-        songs={songs}
-        setCurrentSong={setCurrentSong}
-        audioRef={audioRef}
-        isPlaying={isPlaying}
-        setSongs={setSongs}
-        libraryStatus={libraryStatus}
-      /> */}
-
-        <Credit />
-        <audio
-          onLoadedMetadata={updateTimeHandler}
-          onTimeUpdate={updateTimeHandler}
-          onEnded={songEndHandler}
-          ref={audioRef}
-          src={currentSong.audio}
-        />
+          <Button
+            onClick={() => {
+              window.open(
+                'https://opensea.io/assets/0x60d08dbded0bf56d21977b597793e69d1c5456e0/' +
+                  song.id
+              )
+            }}
+            target="_blank"
+            type="secondary"
+            mt={1.2}
+            scale={1}
+          >
+            Buy on Open Sea
+          </Button>
+        </div>
       </div>
     </div>
   )
 }
 
-const AppContainer = styled.div`
-  transition: all 0.5s ease;
-  display: flex;
-`
+export async function getServerSideProps(context) {
+  try {
+    let song = await fetch(
+      'https://sounds-visualizer-api.sambarrowclough.repl.co/v2/songs/' +
+        context.query.id
+    ).then(r => r.json())
 
-// export async function getServerSideProps(context) {
-//   const song = await fetch(
-//     'https://sounds-visualizer-api.sambarrowclough.repl.co/v2/songs/' +
-//       context.query.id
-//   ).then(r => r.json())
-//   return {
-//     props: { song } // will be passed to the page component as props
-//   }
-// }
+    return {
+      props: { song } // will be passed to the page component as props
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
