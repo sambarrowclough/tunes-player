@@ -439,7 +439,7 @@ const getSong = async id => {
   //console.log(b)
   b = b.replace('data:application/json;base64,', '')
   b = JSON.parse(new Buffer(b, 'base64'))
-  url = b.animation_url.replace('ipfs://', '')
+  let url = b.animation_url.replace('ipfs://', '')
   burl = 'https://ipfs.io/ipfs/' + url
   b.url = burl
   return b
