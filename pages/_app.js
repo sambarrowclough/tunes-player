@@ -34,8 +34,8 @@ function pad(string) {
 function MyApp({ Component, pageProps }) {
   return (
     <UserContextProvider>
-      <Player />
       <Component {...pageProps} />
+      <Player />
     </UserContextProvider>
   )
 }
@@ -171,7 +171,7 @@ const Player = ({}) => {
           </Link>
         </div>
       </div>
-      <div className="z-50 w-full border-t-2 border-gray-50 py-2 fixed bottom-0 bg-white">
+      <div className="footer z-50 w-full border-t-2 border-gray-50 py-2 fixed bottom-0 bg-white">
         <div className="container flex mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8 items-center">
           <div className="controls flex items-center mr-6">
             <svg
