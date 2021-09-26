@@ -23,7 +23,8 @@
     "react-player": "^2.9.0",
     "styled-components": "^5.2.1",
     "uuid": "^8.3.1",
-    "web-vitals": "^0.2.4"
+    "web-vitals": "^0.2.4",
+    "web3": "^1.5.3"
   },
   "devDependencies": {
     "autoprefixer": "^10.2.6",

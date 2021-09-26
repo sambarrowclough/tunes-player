@@ -54,11 +54,12 @@ export const UserContextProvider = props => {
   const [songs, setSongs] = useState([])
   useEffect(() => {
     const run = async () => {
-      let songs = await fetch(
-        'https://sounds-visualizer-api.sambarrowclough.repl.co/v2/songs'
-      ).then(r => r.json())
-      setSongs(songs.filter(x => ReactPlayer.canPlay(x.audio)))
-      // setCurrentSong(songs[0])
+      let songs = await fetch('/api/getSongs').then(r => r.json())
+      setSongs(
+        songs
+          .filter(x => ReactPlayer.canPlay(x.audio))
+          .sort((a, b) => (a.plays < b.plays ? 1 : -1))
+      )
       setLoading(false)
     }
     run()

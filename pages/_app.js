@@ -4,14 +4,8 @@ import { useApp, UserContextProvider } from '@/utils/useApp'
 import ReactPlayer from 'react-player'
 import { useState, useRef, useEffect } from 'react'
 import { usePlayer } from '@/utils/usePlayer'
+import { supabase } from '@/utils/supabase'
 import Link from 'next/link'
-
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = 'https://trfvrobvcrzcsvjvimfi.supabase.co'
-const supabaseKey =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYzMjY1OTQzOSwiZXhwIjoxOTQ4MjM1NDM5fQ.UPpKk3eyIMMipswMAhU1ixoG56WwLdqWsVuB7TOai0A'
-const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Render a YouTube video player
 function Duration({ className, seconds }) {
