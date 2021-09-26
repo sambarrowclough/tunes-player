@@ -1,10 +1,10 @@
 const Web3 = require('web3')
 import { supabase } from '@/utils/supabase'
-web3 = new Web3()
+let web3 = new Web3()
 web3.eth.Contract.setProvider(
   'https://mainnet.infura.io/v3/1971ca31434444698172d1ef943bef37'
 )
-c = new web3.eth.Contract(
+let c = new web3.eth.Contract(
   [
     {
       inputs: [
