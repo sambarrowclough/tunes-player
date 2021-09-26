@@ -11,6 +11,9 @@ import Credit from '../components/Credit'
 import { useApp } from '@/utils/useApp'
 import { useRouter } from 'next/router'
 import { usePlayer } from '@/utils/usePlayer'
+import { useClipboard } from '@geist-ui/react'
+import 'vercel-toast/dist/vercel-toast.css'
+import { createToast } from 'vercel-toast'
 
 export default function Home() {
   return (
@@ -66,6 +69,7 @@ export const App = () => {
       </div>
     )
 
+  const { copy } = useClipboard()
   return (
     <AppContainer>
       {/* <Nav
@@ -98,48 +102,83 @@ export const App = () => {
                 key={song.id}
                 className="group relative"
               >
-                <div className="relative w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden lg:aspect-none">
-                  <img
-                    src={song.cover}
-                    // alt={product.imageAlt}
-                    className="w-full h-full object-center object-cover lg:w-full lg:h-full "
-                  />
-
-                  <div
-                    onClick={() => playSong(song)}
-                    className="bg-white flex rounded-full border-gray-700 text-gray-900 p-3 absolute top-5 left-5 hidden play-item cursor-default transition-all z-10 hover:scale-105"
+                <div className="flex relative w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden lg:aspect-none">
+                  <a
+                    className="cursor-pointer"
+                    onClick={() => {
+                      router.push('/songs/' + song.id)
+                    }}
                   >
-                    <svg
-                      width="30"
-                      height="30"
-                      viewBox="0 0 15 15"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+                    <img
+                      src={song.cover}
+                      // alt={product.imageAlt}
+                      className="w-full h-full object-center object-cover lg:w-full lg:h-full "
+                    />
+
+                    <div
+                      onClick={() => playSong(song)}
+                      className="bg-white flex rounded-full border-gray-700 text-gray-900 p-3 absolute top-5 left-5 hidden play-item cursor-default transition-all z-10 hover:scale-105"
                     >
-                      <path
-                        d="M3.24182 2.32181C3.3919 2.23132 3.5784 2.22601 3.73338 2.30781L12.7334 7.05781C12.8974 7.14436 13 7.31457 13 7.5C13 7.68543 12.8974 7.85564 12.7334 7.94219L3.73338 12.6922C3.5784 12.774 3.3919 12.7687 3.24182 12.6782C3.09175 12.5877 3 12.4252 3 12.25V2.75C3 2.57476 3.09175 2.4123 3.24182 2.32181ZM4 3.57925V11.4207L11.4288 7.5L4 3.57925Z"
-                        fill="currentColor"
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
-                      ></path>
-                    </svg>
-                  </div>
+                      <svg
+                        width="30"
+                        height="30"
+                        viewBox="0 0 15 15"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M3.24182 2.32181C3.3919 2.23132 3.5784 2.22601 3.73338 2.30781L12.7334 7.05781C12.8974 7.14436 13 7.31457 13 7.5C13 7.68543 12.8974 7.85564 12.7334 7.94219L3.73338 12.6922C3.5784 12.774 3.3919 12.7687 3.24182 12.6782C3.09175 12.5877 3 12.4252 3 12.25V2.75C3 2.57476 3.09175 2.4123 3.24182 2.32181ZM4 3.57925V11.4207L11.4288 7.5L4 3.57925Z"
+                          fill="currentColor"
+                          fill-rule="evenodd"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
+                  </a>
                 </div>
+
                 <div className="mt-4 flex justify-between">
                   <div>
                     <h3 className="text-sm text-gray-700">
-                      <a
-                        className="cursor-pointer"
-                        onClick={() => {
-                          router.push('/songs/' + song.id)
-                        }}
-                      >
+                      <div className="flex items-center justify-between">
                         <p className="mt-1 text-xs text-gray-400 mb-2">
                           {song.plays} plays
                         </p>
-                        <span aria-hidden="true" className="absolute inset-0" />
+                        {(() => {
+                          return (
+                            <svg
+                              className="cursor-pointer"
+                              onClick={e => {
+                                e.preventDefault()
+                                e.stopPropagation()
+                                let songUrl =
+                                  window.location + '/songs/' + song.id
+                                copy(songUrl)
+                                createToast(
+                                  `Copied ${song.name} to clipboard!`,
+                                  { type: 'success', timeout: 2000 }
+                                )
+                              }}
+                              width="15"
+                              height="15"
+                              viewBox="0 0 15 15"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M1 9.50006C1 10.3285 1.67157 11.0001 2.5 11.0001H4L4 10.0001H2.5C2.22386 10.0001 2 9.7762 2 9.50006L2 2.50006C2 2.22392 2.22386 2.00006 2.5 2.00006L9.5 2.00006C9.77614 2.00006 10 2.22392 10 2.50006V4.00002H5.5C4.67158 4.00002 4 4.67159 4 5.50002V12.5C4 13.3284 4.67158 14 5.5 14H12.5C13.3284 14 14 13.3284 14 12.5V5.50002C14 4.67159 13.3284 4.00002 12.5 4.00002H11V2.50006C11 1.67163 10.3284 1.00006 9.5 1.00006H2.5C1.67157 1.00006 1 1.67163 1 2.50006V9.50006ZM5 5.50002C5 5.22388 5.22386 5.00002 5.5 5.00002H12.5C12.7761 5.00002 13 5.22388 13 5.50002V12.5C13 12.7762 12.7761 13 12.5 13H5.5C5.22386 13 5 12.7762 5 12.5V5.50002Z"
+                                fill="currentColor"
+                                fill-rule="evenodd"
+                                clip-rule="evenodd"
+                              ></path>
+                            </svg>
+                          )
+                        })()}
+                      </div>
+                      <span aria-hidden="true" className="">
+                        {' '}
                         {song.name}
-                      </a>
+                      </span>
                     </h3>
                   </div>
                   <p className="text-sm font-medium text-gray-900">

@@ -5273,6 +5273,11 @@
   "resolved" "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz"
   "version" "1.1.2"
 
+"vercel-toast@^1.5.3":
+  "integrity" "sha512-LTaRI4ctCiY7ynY4MmCazF72l9wBTXD4PO0bg1m3ru8ud2sgfFz8CN9NHnwYmR5P+tm2HpPpR0fcUls0o782wg=="
+  "resolved" "https://registry.npmjs.org/vercel-toast/-/vercel-toast-1.5.3.tgz"
+  "version" "1.5.3"
+
 "verror@1.10.0":
   "integrity" "sha1-OhBcoXBTr1XW4nDB+CiGguGNpAA="
   "resolved" "https://registry.npmjs.org/verror/-/verror-1.10.0.tgz"
