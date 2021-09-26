@@ -116,7 +116,11 @@ export const App = () => {
                     />
 
                     <div
-                      onClick={() => playSong(song)}
+                      onClick={e => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        playSong(song)
+                      }}
                       className="bg-white flex rounded-full border-gray-700 text-gray-900 p-3 absolute top-5 left-5 hidden play-item cursor-default transition-all z-10 hover:scale-105"
                     >
                       <svg
