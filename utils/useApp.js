@@ -14,6 +14,12 @@ export const UserContextProvider = props => {
     duration: 0
   })
 
+  const player = useRef()
+  const [duration, setDuration] = useState(0)
+  const [playing, setPlaying] = useState(false)
+  const [played, setPlayed] = useState(0)
+  const [seeking, setSeeking] = useState(false)
+
   useEffect(() => {
     const run = async () => {
       let songs = await fetch(
@@ -38,7 +44,23 @@ export const UserContextProvider = props => {
     libraryStatus,
     setLibraryStatus,
     songInfo,
-    setSongInfo
+    setSongInfo,
+
+    // handleProgress,
+    // handlePlayPause,
+    // handleSeekChange,
+    // handleSeekMouseUp,
+    // handleSeekMouseDown,
+    // handleDuration,
+    played,
+    setPlayed,
+    duration,
+    setDuration,
+    player,
+    playing,
+    setPlaying,
+    seeking,
+    setSeeking
   }
   return <UserContext.Provider value={value} {...props} />
 }
