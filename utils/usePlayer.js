@@ -1,9 +1,7 @@
-import { useEffect, useState, createContext, useContext, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import ReactPlayer from 'react-player'
 
-export const UserContext = createContext()
-
-export const UserContextProvider = props => {
+export const usePlayer = () => {
   const player = useRef()
   const currentSongIndex = useRef(0)
   const [duration, setDuration] = useState(0)
@@ -19,10 +17,8 @@ export const UserContextProvider = props => {
     setSeeking(true)
   }
 
-  const handleSeekChange = value => {
-    //setPlayed(e.target.value)
-    console.log(value)
-    setPlayed(value)
+  const handleSeekChange = e => {
+    setPlayed(e.target.value)
   }
 
   const handleSeekMouseUp = e => {
@@ -37,18 +33,14 @@ export const UserContextProvider = props => {
     }
   }
 
-  const handleDuration = e => {
-    console.log(e)
-    setDuration(e)
-  }
+  const handleDuration = e => setDuration(e)
   const handlePlay = _ => setPlaying(true)
 
   const load = url => {
-    //if (currentSong.audio == url) return
+    console.log(url)
     setUrl(url)
     setPlayed(0)
     setPlaying(true)
-    setTracked(false)
   }
 
   const [songs, setSongs] = useState([])
@@ -59,7 +51,7 @@ export const UserContextProvider = props => {
       ).then(r => r.json())
       setSongs(songs.filter(x => ReactPlayer.canPlay(x.audio)))
       // setCurrentSong(songs[0])
-      setLoading(false)
+      // setLoading(false)
     }
     run()
   }, [])
@@ -83,9 +75,7 @@ export const UserContextProvider = props => {
     }
   }
 
-  const [tracked, setTracked] = useState(false)
-
-  let value = {
+  return {
     played,
     duration,
     player,
@@ -94,7 +84,6 @@ export const UserContextProvider = props => {
     handlePlayPause,
     handleSeekMouseDown,
     handleSeekChange,
-    setPlayed,
     handleSeekMouseUp,
     url,
     setUrl,
@@ -107,19 +96,6 @@ export const UserContextProvider = props => {
     loading,
     setLoading,
     songs,
-    skipTrackHandler,
-    tracked,
-    setTracked,
-    setPlaying
+    skipTrackHandler
   }
-
-  return <UserContext.Provider value={value} {...props} />
-}
-
-export const useApp = () => {
-  const context = useContext(UserContext)
-  if (context === undefined) {
-    throw new Error(`useUser must be used within a UserContextProvider.`)
-  }
-  return context
 }

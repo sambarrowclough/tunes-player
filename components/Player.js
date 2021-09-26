@@ -91,63 +91,90 @@ const Player = ({
 
   return (
     <PlayerContainer>
-      <TimeControlContainer>
-        <P>{getTime(songInfo.currentTime || 0)}</P>
-        <Track currentSong={currentSong}>
-          <Input
-            onChange={dragHandler}
-            min={0}
-            max={songInfo.duration || 0}
-            value={songInfo.currentTime}
-            type="range"
+      <div className="flex flex-col">
+        <div className="flex items-center mb-5">
+          <FontAwesomeIcon
+            className="mr-"
+            onClick={playSongHandler}
+            className="play"
+            icon={togglePlayPauseIcon()}
+            size="1x"
+            style={pointer}
+            style={{ width: '40px' }}
           />
-          <AnimateTrack songInfo={songInfo}></AnimateTrack>
-        </Track>
+          <div className="text-4xl font-bold ml-4">{currentSong.name}</div>
+          <div>{currentSong.artist}</div>
+        </div>
+        <div className="flex items-center">
+          <div className="text-gray-500 text-sm mr-2">
+            {getTime(songInfo.currentTime || 0)}
+          </div>
+          <Track currentSong={currentSong}>
+            <Input
+              onChange={dragHandler}
+              min={0}
+              max={songInfo.duration || 0}
+              value={songInfo.currentTime}
+              type="range"
+            />
+            <AnimateTrack songInfo={songInfo}></AnimateTrack>
+          </Track>
 
-        <P>{getTime(songInfo.duration || 0)}</P>
-      </TimeControlContainer>
+          <div className="text-gray-500 text-sm ml-2">
+            {getTime(songInfo.duration || 0)}
+          </div>
+        </div>
+      </div>
       <PlayControlContainer>
-        <FontAwesomeIcon
+        {/* <FontAwesomeIcon
           onClick={() => skipTrackHandler('skip-back')}
           className="skip-back"
           icon={faAngleLeft}
           size="2x"
           style={pointer}
-        />
-        <FontAwesomeIcon
-          onClick={playSongHandler}
-          className="play"
-          icon={togglePlayPauseIcon()}
-          size="2x"
-          style={pointer}
-        />
-        <FontAwesomeIcon
+        /> */}
+
+        {/* <FontAwesomeIcon
           onClick={() => skipTrackHandler('skip-forward')}
           className="skip-forward"
           icon={faAngleRight}
           size="2x"
           style={pointer}
-        />
+        /> */}
+
+        <a
+          className="mt-5"
+          style={{
+            background: 'white',
+            color: 'black',
+            borderRadius: '8px',
+            padding: '10px',
+            border: '1px solid #666'
+          }}
+          target="_blank"
+          href={
+            'https://opensea.io/assets/0x60d08dbded0bf56d21977b597793e69d1c5456e0/' +
+            currentSong.id
+          }
+        >
+          Buy on Open Sea
+        </a>
       </PlayControlContainer>
     </PlayerContainer>
   )
 }
 
 const PlayerContainer = styled.div`
-  min-height: 20vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  margin-left: 2em;
 `
 
 const TimeControlContainer = styled.div`
   margin-top: 5vh;
-  width: 50%;
+  width: 100%;
   display: flex;
-  @media screen and (max-width: 768px) {
-    width: 90%;
-  }
 `
 
 const Track = styled.div`
@@ -228,11 +255,7 @@ const PlayControlContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  width: 30%;
-  @media screen and (max-width: 768px) {
-    width: 60%;
-  }
+  width: 100%;
 `
 
 export default Player
