@@ -450,21 +450,26 @@ module.exports = async (req, res) => {
     let a = await fetch(
       'https://api.opensea.io/api/v1/assets?order_direction=desc&offset=0&limit=50&collection=songs-for-tunes'
     ).then(r => r.json())
-    let ids = a.assets.map(x => x.token_id)
-    let songs = await Promise.all(ids.map(id => getSong(id)))
-    songs = songs.map((x, i) => {
-      return {
-        name: x.name,
-        id: x.tune_token_id,
-        cover:
-          'https://ipfs.io/ipfs/Qmcu552EPV98N9vi96sGN72XJCeBF4n7jC5XtA1h3HF5kC/' +
-          x.tune_token_id +
-          '-composite.png',
-        audio: x.url,
-        active: i === 0 ? true : false,
-        color: ['#205950', '#2ab3bf']
-      }
-    })
+    let songs = a.assets.map(x => ({
+      id: x.token_id,
+      cover: x.image_thumbnail_url,
+      audio: x.animation_url,
+      name: x.name
+    }))
+    // let songs = await Promise.all(ids.map(id => getSong(id)))
+    // songs = songs.map((x, i) => {
+    //   return {
+    //     name: x.name,
+    //     id: x.tune_token_id,
+    //     cover:
+    //       'https://ipfs.io/ipfs/Qmcu552EPV98N9vi96sGN72XJCeBF4n7jC5XtA1h3HF5kC/' +
+    //       x.tune_token_id +
+    //       '-composite.png',
+    //     audio: x.animation_url,
+    //     active: i === 0 ? true : false,
+    //     color: ['#205950', '#2ab3bf']
+    //   }
+    // })
     const { error, data } = await supabase.from('plays').select('*')
     songs = songs.map(song => {
       song.plays = data.filter(x => x.songId == song.id).length

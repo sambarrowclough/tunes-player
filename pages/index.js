@@ -11,7 +11,7 @@ import Credit from '../components/Credit'
 import { useApp } from '@/utils/useApp'
 import { useRouter } from 'next/router'
 import { usePlayer } from '@/utils/usePlayer'
-import { useClipboard } from '@geist-ui/react'
+import { useClipboard, Tabs } from '@geist-ui/react'
 import 'vercel-toast/dist/vercel-toast.css'
 import { createToast } from 'vercel-toast'
 
@@ -32,9 +32,10 @@ export const App = () => {
   // Ref
 
   //const { loading } = useApp()
-  const { songs, load, setCurrentSong, skipTrackHandler, loading } = useApp()
-
+  const { load, setCurrentSong, songsRef, loading } = useApp()
+  const { copy } = useClipboard()
   const router = useRouter()
+  const [playingSongIndex, setPlayingSongIndex] = useState(-1)
   const { id } = router.query
 
   const playSong = async song => {
@@ -69,7 +70,6 @@ export const App = () => {
       </div>
     )
 
-  const { copy } = useClipboard()
   return (
     <AppContainer>
       {/* <Nav
@@ -86,111 +86,263 @@ export const App = () => {
             Library
           </h2>
 
-          <div className="mt-6 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-6 xl:gap-x-8">
-            {songs.map((song, i) => (
-              <div
-                onMouseOver={() =>
-                  document
-                    .querySelectorAll('.play-item')
-                    [i].classList.remove('hidden')
-                }
-                onMouseLeave={() =>
-                  document
-                    .querySelectorAll('.play-item')
-                    [i].classList.add('hidden')
-                }
-                key={song.id}
-                className="group relative"
-              >
-                <div className="flex relative w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden lg:aspect-none">
-                  <a
-                    className="cursor-pointer"
-                    onClick={() => {
-                      router.push('/songs/' + song.id)
-                    }}
-                  >
-                    <img
-                      src={song.cover}
-                      // alt={product.imageAlt}
-                      className="w-full h-full object-center object-cover lg:w-full lg:h-full "
-                    />
-
-                    <div
-                      onClick={e => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        playSong(song)
+          <div className="mt-6">
+            <Tabs initialValue="1">
+              <Tabs.Item label="Latest" value="1">
+                {songsRef.current
+                  .sort((a, b) => (a.initialIndex > b.initialIndex ? 1 : -1))
+                  .map((song, i) => (
+                    <a
+                      onClick={() => {
+                        router.push('/songs/' + song.id)
                       }}
-                      className="bg-white flex rounded-full border-gray-700 text-gray-900 p-3 absolute top-5 left-5 hidden play-item cursor-default transition-all z-10 hover:scale-105"
+                      className="border-b-2 border-gray-50 py-5 flex items-center just"
                     >
-                      <svg
-                        width="30"
-                        height="30"
-                        viewBox="0 0 15 15"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M3.24182 2.32181C3.3919 2.23132 3.5784 2.22601 3.73338 2.30781L12.7334 7.05781C12.8974 7.14436 13 7.31457 13 7.5C13 7.68543 12.8974 7.85564 12.7334 7.94219L3.73338 12.6922C3.5784 12.774 3.3919 12.7687 3.24182 12.6782C3.09175 12.5877 3 12.4252 3 12.25V2.75C3 2.57476 3.09175 2.4123 3.24182 2.32181ZM4 3.57925V11.4207L11.4288 7.5L4 3.57925Z"
-                          fill="currentColor"
-                          fill-rule="evenodd"
-                          clip-rule="evenodd"
-                        ></path>
-                      </svg>
-                    </div>
-                  </a>
-                </div>
-
-                <div className="mt-4 flex justify-between">
-                  <div>
-                    <h3 className="text-sm text-gray-700">
-                      <div className="flex items-center justify-between">
-                        <p className="mt-1 text-xs text-gray-400 mb-2">
-                          {song.plays} plays
-                        </p>
-                        {(() => {
-                          return (
-                            <svg
-                              className="cursor-pointer"
-                              onClick={e => {
-                                e.preventDefault()
-                                e.stopPropagation()
-                                let songUrl =
-                                  window.location + '/songs/' + song.id
-                                copy(songUrl)
-                                createToast(
-                                  `Copied ${song.name} to clipboard!`,
-                                  { type: 'success', timeout: 2000 }
-                                )
-                              }}
-                              width="15"
-                              height="15"
-                              viewBox="0 0 15 15"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M1 9.50006C1 10.3285 1.67157 11.0001 2.5 11.0001H4L4 10.0001H2.5C2.22386 10.0001 2 9.7762 2 9.50006L2 2.50006C2 2.22392 2.22386 2.00006 2.5 2.00006L9.5 2.00006C9.77614 2.00006 10 2.22392 10 2.50006V4.00002H5.5C4.67158 4.00002 4 4.67159 4 5.50002V12.5C4 13.3284 4.67158 14 5.5 14H12.5C13.3284 14 14 13.3284 14 12.5V5.50002C14 4.67159 13.3284 4.00002 12.5 4.00002H11V2.50006C11 1.67163 10.3284 1.00006 9.5 1.00006H2.5C1.67157 1.00006 1 1.67163 1 2.50006V9.50006ZM5 5.50002C5 5.22388 5.22386 5.00002 5.5 5.00002H12.5C12.7761 5.00002 13 5.22388 13 5.50002V12.5C13 12.7762 12.7761 13 12.5 13H5.5C5.22386 13 5 12.7762 5 12.5V5.50002Z"
-                                fill="currentColor"
-                                fill-rule="evenodd"
-                                clip-rule="evenodd"
-                              ></path>
-                            </svg>
-                          )
-                        })()}
-                      </div>
-                      <span aria-hidden="true" className="">
-                        {' '}
+                      {false ? (
+                        <svg
+                          //onClick={handlePlayPause}
+                          width="20"
+                          height="20"
+                          viewBox="0 0 15 15"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M6.04995 2.74998C6.04995 2.44623 5.80371 2.19998 5.49995 2.19998C5.19619 2.19998 4.94995 2.44623 4.94995 2.74998V12.25C4.94995 12.5537 5.19619 12.8 5.49995 12.8C5.80371 12.8 6.04995 12.5537 6.04995 12.25V2.74998ZM10.05 2.74998C10.05 2.44623 9.80371 2.19998 9.49995 2.19998C9.19619 2.19998 8.94995 2.44623 8.94995 2.74998V12.25C8.94995 12.5537 9.19619 12.8 9.49995 12.8C9.80371 12.8 10.05 12.5537 10.05 12.25V2.74998Z"
+                            fill="#666"
+                            fill-rule="evenodd"
+                            clip-rule="evenodd"
+                          ></path>
+                        </svg>
+                      ) : (
+                        <div
+                          onClick={e => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            playSong(song)
+                            setPlayingSongIndex(i)
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 15 15"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M3.24182 2.32181C3.3919 2.23132 3.5784 2.22601 3.73338 2.30781L12.7334 7.05781C12.8974 7.14436 13 7.31457 13 7.5C13 7.68543 12.8974 7.85564 12.7334 7.94219L3.73338 12.6922C3.5784 12.774 3.3919 12.7687 3.24182 12.6782C3.09175 12.5877 3 12.4252 3 12.25V2.75C3 2.57476 3.09175 2.4123 3.24182 2.32181ZM4 3.57925V11.4207L11.4288 7.5L4 3.57925Z"
+                              fill="#666"
+                              fill-rule="evenodd"
+                              clip-rule="evenodd"
+                            ></path>
+                          </svg>
+                        </div>
+                      )}
+                      <img
+                        className="cursor-pointer rounded-full h-8 w-8 ml-4"
+                        src={song.cover}
+                      />
+                      <div className="cursor-pointer text-sm text-gray-600 ml-4">
                         {song.name}
-                      </span>
-                    </h3>
-                  </div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {/* {product.price} */}
-                  </p>
-                </div>
-              </div>
-            ))}
+                      </div>
+
+                      <div
+                        style={{ display: 'flex', flexGrow: '1' }}
+                        className="flex-grow-1"
+                      ></div>
+                      <button
+                        onClick={e => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          window.open(
+                            'https://opensea.io/assets/0x60d08dbded0bf56d21977b597793e69d1c5456e0/' +
+                              song.id
+                          )
+                        }}
+                        target="_blank"
+                        className="text-xs text-gray-400 ml-4 flex items-center"
+                      >
+                        <div className="mr-1">open sea</div>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M3.5 3C3.22386 3 3 3.22386 3 3.5C3 3.77614 3.22386 4 3.5 4V3ZM8.5 3.5H9C9 3.22386 8.77614 3 8.5 3V3.5ZM8 8.5C8 8.77614 8.22386 9 8.5 9C8.77614 9 9 8.77614 9 8.5H8ZM2.64645 8.64645C2.45118 8.84171 2.45118 9.15829 2.64645 9.35355C2.84171 9.54882 3.15829 9.54882 3.35355 9.35355L2.64645 8.64645ZM3.5 4H8.5V3H3.5V4ZM8 3.5V8.5H9V3.5H8ZM8.14645 3.14645L2.64645 8.64645L3.35355 9.35355L8.85355 3.85355L8.14645 3.14645Z"
+                            fill="#111"
+                          ></path>
+                        </svg>
+                      </button>
+                      <div className="text-xs text-gray-400 ml-4">
+                        {song.plays} plays
+                      </div>
+
+                      {(() => {
+                        return (
+                          <svg
+                            className="cursor-pointer ml-4"
+                            onClick={e => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              let songUrl =
+                                window.location + '/songs/' + song.id
+                              copy(songUrl)
+                              createToast(`Copied ${song.name} to clipboard!`, {
+                                type: 'success',
+                                timeout: 2000
+                              })
+                            }}
+                            width="15"
+                            height="15"
+                            viewBox="0 0 15 15"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M1 9.50006C1 10.3285 1.67157 11.0001 2.5 11.0001H4L4 10.0001H2.5C2.22386 10.0001 2 9.7762 2 9.50006L2 2.50006C2 2.22392 2.22386 2.00006 2.5 2.00006L9.5 2.00006C9.77614 2.00006 10 2.22392 10 2.50006V4.00002H5.5C4.67158 4.00002 4 4.67159 4 5.50002V12.5C4 13.3284 4.67158 14 5.5 14H12.5C13.3284 14 14 13.3284 14 12.5V5.50002C14 4.67159 13.3284 4.00002 12.5 4.00002H11V2.50006C11 1.67163 10.3284 1.00006 9.5 1.00006H2.5C1.67157 1.00006 1 1.67163 1 2.50006V9.50006ZM5 5.50002C5 5.22388 5.22386 5.00002 5.5 5.00002H12.5C12.7761 5.00002 13 5.22388 13 5.50002V12.5C13 12.7762 12.7761 13 12.5 13H5.5C5.22386 13 5 12.7762 5 12.5V5.50002Z"
+                              fill="#666"
+                              fill-rule="evenodd"
+                              clip-rule="evenodd"
+                            ></path>
+                          </svg>
+                        )
+                      })()}
+                    </a>
+                  ))}
+              </Tabs.Item>
+              <Tabs.Item label="Popular" value="2">
+                {songsRef.current
+                  .sort((a, b) => (a.plays < b.plays ? 1 : -1))
+                  .map((song, i) => (
+                    <a
+                      onClick={() => {
+                        router.push('/songs/' + song.id)
+                      }}
+                      className="border-b-2 border-gray-50 py-5 flex items-center just"
+                    >
+                      {false ? (
+                        <svg
+                          //onClick={handlePlayPause}
+                          width="20"
+                          height="20"
+                          viewBox="0 0 15 15"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M6.04995 2.74998C6.04995 2.44623 5.80371 2.19998 5.49995 2.19998C5.19619 2.19998 4.94995 2.44623 4.94995 2.74998V12.25C4.94995 12.5537 5.19619 12.8 5.49995 12.8C5.80371 12.8 6.04995 12.5537 6.04995 12.25V2.74998ZM10.05 2.74998C10.05 2.44623 9.80371 2.19998 9.49995 2.19998C9.19619 2.19998 8.94995 2.44623 8.94995 2.74998V12.25C8.94995 12.5537 9.19619 12.8 9.49995 12.8C9.80371 12.8 10.05 12.5537 10.05 12.25V2.74998Z"
+                            fill="#666"
+                            fill-rule="evenodd"
+                            clip-rule="evenodd"
+                          ></path>
+                        </svg>
+                      ) : (
+                        <div
+                          onClick={e => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            playSong(song)
+                            setPlayingSongIndex(i)
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 15 15"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M3.24182 2.32181C3.3919 2.23132 3.5784 2.22601 3.73338 2.30781L12.7334 7.05781C12.8974 7.14436 13 7.31457 13 7.5C13 7.68543 12.8974 7.85564 12.7334 7.94219L3.73338 12.6922C3.5784 12.774 3.3919 12.7687 3.24182 12.6782C3.09175 12.5877 3 12.4252 3 12.25V2.75C3 2.57476 3.09175 2.4123 3.24182 2.32181ZM4 3.57925V11.4207L11.4288 7.5L4 3.57925Z"
+                              fill="#666"
+                              fill-rule="evenodd"
+                              clip-rule="evenodd"
+                            ></path>
+                          </svg>
+                        </div>
+                      )}
+                      <img
+                        className="cursor-pointer rounded-full h-8 w-8 ml-4"
+                        src={song.cover}
+                      />
+                      <div className="cursor-pointer text-sm text-gray-600 ml-4">
+                        {song.name}
+                      </div>
+
+                      <div
+                        style={{ display: 'flex', flexGrow: '1' }}
+                        className="flex-grow-1"
+                      ></div>
+                      <button
+                        onClick={e => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          window.open(
+                            'https://opensea.io/assets/0x60d08dbded0bf56d21977b597793e69d1c5456e0/' +
+                              song.id
+                          )
+                        }}
+                        target="_blank"
+                        className="text-xs text-gray-400 ml-4 flex items-center"
+                      >
+                        <div className="mr-1">open sea</div>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M3.5 3C3.22386 3 3 3.22386 3 3.5C3 3.77614 3.22386 4 3.5 4V3ZM8.5 3.5H9C9 3.22386 8.77614 3 8.5 3V3.5ZM8 8.5C8 8.77614 8.22386 9 8.5 9C8.77614 9 9 8.77614 9 8.5H8ZM2.64645 8.64645C2.45118 8.84171 2.45118 9.15829 2.64645 9.35355C2.84171 9.54882 3.15829 9.54882 3.35355 9.35355L2.64645 8.64645ZM3.5 4H8.5V3H3.5V4ZM8 3.5V8.5H9V3.5H8ZM8.14645 3.14645L2.64645 8.64645L3.35355 9.35355L8.85355 3.85355L8.14645 3.14645Z"
+                            fill="#111"
+                          ></path>
+                        </svg>
+                      </button>
+                      <div className="text-xs text-gray-400 ml-4">
+                        {song.plays} plays
+                      </div>
+
+                      {(() => {
+                        return (
+                          <svg
+                            className="cursor-pointer ml-4"
+                            onClick={e => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              let songUrl =
+                                window.location + '/songs/' + song.id
+                              copy(songUrl)
+                              createToast(`Copied ${song.name} to clipboard!`, {
+                                type: 'success',
+                                timeout: 2000
+                              })
+                            }}
+                            width="15"
+                            height="15"
+                            viewBox="0 0 15 15"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M1 9.50006C1 10.3285 1.67157 11.0001 2.5 11.0001H4L4 10.0001H2.5C2.22386 10.0001 2 9.7762 2 9.50006L2 2.50006C2 2.22392 2.22386 2.00006 2.5 2.00006L9.5 2.00006C9.77614 2.00006 10 2.22392 10 2.50006V4.00002H5.5C4.67158 4.00002 4 4.67159 4 5.50002V12.5C4 13.3284 4.67158 14 5.5 14H12.5C13.3284 14 14 13.3284 14 12.5V5.50002C14 4.67159 13.3284 4.00002 12.5 4.00002H11V2.50006C11 1.67163 10.3284 1.00006 9.5 1.00006H2.5C1.67157 1.00006 1 1.67163 1 2.50006V9.50006ZM5 5.50002C5 5.22388 5.22386 5.00002 5.5 5.00002H12.5C12.7761 5.00002 13 5.22388 13 5.50002V12.5C13 12.7762 12.7761 13 12.5 13H5.5C5.22386 13 5 12.7762 5 12.5V5.50002Z"
+                              fill="#666"
+                              fill-rule="evenodd"
+                              clip-rule="evenodd"
+                            ></path>
+                          </svg>
+                        )
+                      })()}
+                    </a>
+                  ))}
+              </Tabs.Item>
+            </Tabs>
           </div>
         </div>
       </div>

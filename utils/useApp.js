@@ -1,5 +1,6 @@
 import { useEffect, useState, createContext, useContext, useRef } from 'react'
 import ReactPlayer from 'react-player'
+import * as useStateRef from 'react-usestateref'
 
 export const UserContext = createContext()
 
@@ -51,15 +52,20 @@ export const UserContextProvider = props => {
     setTracked(false)
   }
 
-  const [songs, setSongs] = useState([])
+  const [songs, setSongs, songsRef] = useStateRef([])
   useEffect(() => {
     const run = async () => {
       let songs = await fetch('/api/getSongs').then(r => r.json())
       setSongs(
         songs
           .filter(x => ReactPlayer.canPlay(x.audio))
-          .sort((a, b) => (a.plays < b.plays ? 1 : -1))
+          .map((x, i) => {
+            x.initialIndex = i
+            return x
+          })
+        //.sort((a, b) => (a.plays < b.plays ? 1 : -1))
       )
+
       setLoading(false)
     }
     run()
@@ -108,6 +114,8 @@ export const UserContextProvider = props => {
     loading,
     setLoading,
     songs,
+    setSongs,
+    songsRef,
     skipTrackHandler,
     tracked,
     setTracked,
